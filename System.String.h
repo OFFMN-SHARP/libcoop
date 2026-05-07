@@ -63,7 +63,7 @@ static void String_Init(String* s) {
 String String_FromInt(int value) {
 	char buf[32];
 	snprintf(buf, sizeof(buf), "%d", value);
-	return GetString(buf);   // ¸´ÓÃ GetString
+	return GetString(buf);   // å¤ç”¨ GetString
 }
 static bool String_Equals(struct string_t* self, const char* other) {
 	if (!self || !self->data || !other) return false;
@@ -93,11 +93,11 @@ static size_t String_Length(struct string_t* self) {
 }
 
 static size_t String_IndexOf(struct string_t* self, const char* str, int from, int count) {
-	if (!self || !self->data || !str || !*str) return (size_t)-1;  // ¿Õ´®·µ»Ø -1 (size_t µÄ×î´óÖµ)
+	if (!self || !self->data || !str || !*str) return (size_t)-1;  // ç©ºä¸²è¿”å› -1 (size_t çš„æœ€å¤§å€¼)
 	if (from < 0) from = 0;
 	if (from >= (int)self->len) return (size_t)-1;
 
-	// ¼ÆËãÊµ¼ÊÒªËÑË÷µÄ½áÎ²Î»ÖÃ
+	// è®¡ç®—å®é™…è¦æœç´¢çš„ç»“å°¾ä½ç½®
 	size_t end;
 	if (count < 0 || from + count >(int)self->len) {
 		end = self->len;
@@ -106,7 +106,7 @@ static size_t String_IndexOf(struct string_t* self, const char* str, int from, i
 		end = from + count;
 	}
 
-	// ´Ó from ¿ªÊ¼£¬ÔÚ [from, end) ·¶Î§ÄÚ²éÕÒ
+	// ä» from å¼€å§‹ï¼Œåœ¨ [from, end) èŒƒå›´å†…æŸ¥æ‰¾
 	for (size_t i = from; i + strlen(str) <= end; i++) {
 		if (memcmp(self->data + i, str, strlen(str)) == 0) {
 			return i;
@@ -137,7 +137,7 @@ static bool String_Contains(struct string_t* self, const char* str) {
 
 static void String_Clear(struct string_t* self) {
 	if (!self) return;
-	free(self->data);  // ÊÍ·Å¾ÉÊı¾İ
+	free(self->data);  // é‡Šæ”¾æ—§æ•°æ®
 	self->len = 0;
 	self->data = (char*)malloc(1);
 	if (self->data) {
@@ -149,7 +149,7 @@ static void String_Clear(struct string_t* self) {
 static struct string_t String_Clone(struct string_t* self) {
 	String clone;
 	if (!self || !self->data) {
-		// Èç¹û×Ô¼º¾ÍÊÇ¿ÕµÄ£¬¿ËÂ¡¿Õ´®
+		// å¦‚æœè‡ªå·±å°±æ˜¯ç©ºçš„ï¼Œå…‹éš†ç©ºä¸²
 		clone.len = 0;
 		clone.data = (char*)malloc(1);
 		if (clone.data) clone.data[0] = '\0';
@@ -171,15 +171,15 @@ static struct string_t String_Clone(struct string_t* self) {
 static struct string_t String_Replace(struct string_t* self, const char* oldstr, const char* newstr) {
 	String result;
 	if (!self || !self->data || !oldstr || !*oldstr) {
-		// Èç¹ûÔ­´®Îª¿Õ»ò¾É´®Îª¿Õ£¬¾Í·µ»ØÔ­´®µÄ¸±±¾
+		// å¦‚æœåŸä¸²ä¸ºç©ºæˆ–æ—§ä¸²ä¸ºç©ºï¼Œå°±è¿”å›åŸä¸²çš„å‰¯æœ¬
 		return String_Clone(self);
 	}
-	if (!newstr) newstr = "";  // ¿ÕÌæ»»
+	if (!newstr) newstr = "";  // ç©ºæ›¿æ¢
 
 	size_t old_len = strlen(oldstr);
 	size_t new_len = strlen(newstr);
 
-	// ÏÈ¼ÆËãÓĞ¶àÉÙ´¦Ìæ»»
+	// å…ˆè®¡ç®—æœ‰å¤šå°‘å¤„æ›¿æ¢
 	size_t count = 0;
 	size_t pos = 0;
 	while (pos <= self->len - old_len) {
@@ -192,7 +192,7 @@ static struct string_t String_Replace(struct string_t* self, const char* oldstr,
 		}
 	}
 
-	// ¼ÆËã½á¹û´®³¤¶È
+	// è®¡ç®—ç»“æœä¸²é•¿åº¦
 	size_t result_len = self->len + count * (new_len - old_len);
 	result.data = (char*)malloc(result_len + 1);
 	result.len = result_len;
@@ -202,7 +202,7 @@ static struct string_t String_Replace(struct string_t* self, const char* oldstr,
 		return result;
 	}
 
-	// ¹¹½¨ĞÂ×Ö·û´®
+	// æ„å»ºæ–°å­—ç¬¦ä¸²
 	char* dst = result.data;
 	const char* src = self->data;
 	while (*src) {
@@ -225,7 +225,7 @@ static struct string_t String_Replace(struct string_t* self, const char* oldstr,
 static void String_AddChars(struct string_t* self, const char* str) {
 	if (!self || !str) return;
 	if (!self->data) {
-		// Èç¹û×ÔÉí data Îª¿Õ£¬±ä³ÉĞÂ×Ö·û´®
+		// å¦‚æœè‡ªèº« data ä¸ºç©ºï¼Œå˜æˆæ–°å­—ç¬¦ä¸²
 		self->len = strlen(str);
 		self->data = (char*)malloc(self->len + 1);
 		if (self->data) {
@@ -236,7 +236,7 @@ static void String_AddChars(struct string_t* self, const char* str) {
 	}
 	size_t add_len = strlen(str);
 	char* new_data = (char*)realloc(self->data, self->len + add_len + 1);
-	if (!new_data) return;  // ·ÖÅäÊ§°Ü£¬Ô­Êı¾İ²»±ä
+	if (!new_data) return;  // åˆ†é…å¤±è´¥ï¼ŒåŸæ•°æ®ä¸å˜
 	memcpy(new_data + self->len, str, add_len);
 	self->len += add_len;
 	new_data[self->len] = '\0';
@@ -250,15 +250,15 @@ static void String_AddChars(struct string_t* self, const char* str) {
 static void String_SetChars(struct string_t* self, int index, const char* str) {
 	if (!self || !self->data || !str) return;
 	if (index < 0) index = 0;
-	if (index > (int)self->len) index = self->len; // Èç¹û³¬¹ı³¤¶È£¬¾Íµ±×·¼Ó
+	if (index > (int)self->len) index = self->len; // å¦‚æœè¶…è¿‡é•¿åº¦ï¼Œå°±å½“è¿½åŠ 
 
 	size_t new_len = index + strlen(str);
 	char* new_data = (char*)malloc(new_len + 1);
 	if (!new_data) return;
 
-	// ¿½±´Ç°°ë²¿·Ö
+	// æ‹·è´å‰åŠéƒ¨åˆ†
 	memcpy(new_data, self->data, index);
-	// ¿½±´ĞÂ×Ö·û´®
+	// æ‹·è´æ–°å­—ç¬¦ä¸²
 	memcpy(new_data + index, str, strlen(str));
 	new_data[new_len] = '\0';
 
@@ -271,10 +271,10 @@ static void String_SetChars(struct string_t* self, int index, const char* str) {
 static struct string_t String_Skip(struct string_t* self, int count) {
 	if (!self || !self->data || count < 0) count = 0;
 	if (count >= (int)self->len) {
-		// ·µ»Ø¿Õ´®
+		// è¿”å›ç©ºä¸²
 		return String_From("");
 	}
-	// Ö±½ÓÀûÓÃ SubString ÊµÏÖ£¬±ÜÃâÖØ¸´´úÂë
+	// ç›´æ¥åˆ©ç”¨ SubString å®ç°ï¼Œé¿å…é‡å¤ä»£ç 
 	return String_SubString(self, count, (int)(self->len - count));
 }
 
@@ -293,7 +293,7 @@ static struct string_t String_SubString(struct string_t* self, int from, int cou
 		return String_From("");
 	}
 	if (from + count > (int)self->len) {
-		count = self->len - from;  // ½ØÈ¡µ½Ä©Î²
+		count = self->len - from;  // æˆªå–åˆ°æœ«å°¾
 	}
 	sub.len = count;
 	sub.data = (char*)malloc(count + 1);
@@ -310,7 +310,7 @@ static struct string_t String_SubString(struct string_t* self, int from, int cou
 
 static char* String_ToChars(struct string_t* self) {
 	if (!self) return NULL;
-	return self->data;  // ¿ÉÄÜÎª NULL
+	return self->data;  // å¯èƒ½ä¸º NULL
 }
 
 static void String_Dispose(struct string_t* self) {
