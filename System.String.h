@@ -1,47 +1,55 @@
 #pragma once
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdbool.h>
+#include <string.h>
 
 typedef struct string_t {
 	char* data;
 	size_t len;
 	//func:
 	size_t			   (*Length)      (struct string_t* self);
-	size_t		       (*IndexOf)     (struct string_t* self, char* string, int from, int count);
-	bool			   (*StartsWith)  (struct string_t* self, char* string);
-	bool			   (*EndsWith)    (struct string_t* self, char* string);
-	bool			   (*Contains)    (struct string_t* self, char* string);
+	size_t		       (*IndexOf)     (struct string_t* self, const char* string, int from, int count);
+	bool			   (*StartsWith)  (struct string_t* self, const char* string);
+	bool			   (*EndsWith)    (struct string_t* self, const char* string);
+	bool			   (*Contains)    (struct string_t* self, const char* string);
 	bool               (*Equals)      (struct string_t* self, const char* other);
 	void               (*Clear)       (struct string_t* self);
 	struct string_t    (*Clone)       (struct string_t* self);
-	struct string_t    (*Replace)     (struct string_t* self, char* oldstring, char* newstring);
-	void               (*AddChars)    (struct string_t* self, char* string);
-	void               (*SetChars)    (struct string_t* self, int index, char* string);
+	struct string_t    (*Replace)     (struct string_t* self, const char* oldstring, const char* newstring);
+	void               (*AddChars)    (struct string_t* self, const char* string);
+	void               (*SetChars)    (struct string_t* self, int index, const char* string);
 	struct string_t    (*Skip)        (struct string_t* self, int count);
 	struct string_t    (*Take)        (struct string_t* self, int count);
 	struct string_t    (*SubString)   (struct string_t* self, int from, int count);
 	char*              (*ToChars)     (struct string_t* self);
 	void               (*Dispose)	  (struct string_t* self);
-	String             (*FromInt)     (int value);
+	struct string_t    (*FromInt)     (int value);
 }String;
 
+/* Ç°ÏòÉùÃ÷£ºËùÓĞ¾²Ì¬º¯ÊıÉùÃ÷±ØĞëÓë¶¨ÒåÒ»ÖÂ£¨Ê¹ÓÃ const char* ²ÎÊı£© */
+static String GetString(const char* source);
+
 static size_t String_Length(String* self);
-static size_t String_IndexOf(String* self, char* string, int from, int count);
-static bool String_StartsWith(String* self, char* string);
-static bool String_EndsWith(String* self, char* string);
-static bool String_Contains(String* self, char* string);
+static size_t String_IndexOf(String* self, const char* string, int from, int count);
+static bool String_StartsWith(String* self, const char* string);
+static bool String_EndsWith(String* self, const char* string);
+static bool String_Contains(String* self, const char* string);
 static void String_Clear(String* self);
 static String String_Clone(String* self);
-static String String_Replace(String* self, char* oldstring, char* newstring);
-static void String_AddChars(String* self, char* string);
-static void String_SetChars(String* self, int index, char* string);
+static String String_Replace(String* self, const char* oldstring, const char* newstring);
+static void String_AddChars(String* self, const char* string);
+static void String_SetChars(String* self, int index, const char* string);
 static String String_Skip(String* self, int count);
 static String String_Take(String* self, int count);
 static String String_SubString(String* self, int from, int count);
 static char* String_ToChars(String* self);
 static void String_Dispose(String* self);
 static bool String_Equals(String* self, const char* other);
-static String FromInt(int value);
+static String String_FromInt(int value);
 
 static void String_Init(String* s) {
+	if (!s) return;
 	s->Length = String_Length;
 	s->IndexOf = String_IndexOf;
 	s->StartsWith = String_StartsWith;
@@ -58,19 +66,21 @@ static void String_Init(String* s) {
 	s->ToChars = String_ToChars;
 	s->Dispose = String_Dispose;
 	s->Equals = String_Equals;
-	s->FromInt = FromInt;
+	s->FromInt = String_FromInt;
 }
-String String_FromInt(int value) {
+
+static String String_FromInt(int value) {
 	char buf[32];
-	snprintf(buf, sizeof(buf), "%d", value);
-	return GetString(buf);   // å¤ç”¨ GetString
+	_snprintf_s(buf, sizeof(buf), "%d", value);
+	return GetString(buf);   // ¸´ÓÃ GetString
 }
+
 static bool String_Equals(struct string_t* self, const char* other) {
 	if (!self || !self->data || !other) return false;
 	return strcmp(self->data, other) == 0;
 }
 
-String GetString(const char* source){
+static String GetString(const char* source){
 	String ParseredString;
 	if (!source) source = "";
 	ParseredString.len = strlen(source);
@@ -93,11 +103,11 @@ static size_t String_Length(struct string_t* self) {
 }
 
 static size_t String_IndexOf(struct string_t* self, const char* str, int from, int count) {
-	if (!self || !self->data || !str || !*str) return (size_t)-1;  // ç©ºä¸²è¿”å› -1 (size_t çš„æœ€å¤§å€¼)
+	if (!self || !self->data || !str || !*str) return (size_t)-1;  // ¿Õ´®·µ»Ø -1 (size_t µÄ×î´óÖµ)
 	if (from < 0) from = 0;
 	if (from >= (int)self->len) return (size_t)-1;
 
-	// è®¡ç®—å®é™…è¦æœç´¢çš„ç»“å°¾ä½ç½®
+	// ¼ÆËãÊµ¼ÊÒªËÑË÷µÄ½áÎ²Î»ÖÃ
 	size_t end;
 	if (count < 0 || from + count >(int)self->len) {
 		end = self->len;
@@ -106,9 +116,11 @@ static size_t String_IndexOf(struct string_t* self, const char* str, int from, i
 		end = from + count;
 	}
 
-	// ä» from å¼€å§‹ï¼Œåœ¨ [from, end) èŒƒå›´å†…æŸ¥æ‰¾
-	for (size_t i = from; i + strlen(str) <= end; i++) {
-		if (memcmp(self->data + i, str, strlen(str)) == 0) {
+	// ´Ó from ¿ªÊ¼£¬ÔÚ [from, end) ·¶Î§ÄÚ²éÕÒ
+	size_t needle_len = strlen(str);
+	if (needle_len == 0) return (size_t)-1;
+	for (size_t i = from; i + needle_len <= end; i++) {
+		if (memcmp(self->data + i, str, needle_len) == 0) {
 			return i;
 		}
 	}
@@ -129,7 +141,6 @@ static bool String_EndsWith(struct string_t* self, const char* suffix) {
 	return memcmp(self->data + self->len - suf_len, suffix, suf_len) == 0;
 }
 
-
 static bool String_Contains(struct string_t* self, const char* str) {
 	size_t pos = String_IndexOf(self, str, 0, -1);
 	return pos != (size_t)-1;
@@ -137,7 +148,7 @@ static bool String_Contains(struct string_t* self, const char* str) {
 
 static void String_Clear(struct string_t* self) {
 	if (!self) return;
-	free(self->data);  // é‡Šæ”¾æ—§æ•°æ®
+	free(self->data);  // ÊÍ·Å¾ÉÊı¾İ
 	self->len = 0;
 	self->data = (char*)malloc(1);
 	if (self->data) {
@@ -145,11 +156,10 @@ static void String_Clear(struct string_t* self) {
 	}
 }
 
-
 static struct string_t String_Clone(struct string_t* self) {
 	String clone;
 	if (!self || !self->data) {
-		// å¦‚æœè‡ªå·±å°±æ˜¯ç©ºçš„ï¼Œå…‹éš†ç©ºä¸²
+		// Èç¹û×Ô¼º¾ÍÊÇ¿ÕµÄ£¬¿ËÂ¡¿Õ´®
 		clone.len = 0;
 		clone.data = (char*)malloc(1);
 		if (clone.data) clone.data[0] = '\0';
@@ -162,24 +172,22 @@ static struct string_t String_Clone(struct string_t* self) {
 			clone.data[clone.len] = '\0';
 		}
 	}
-	String_BindMethods(&clone);
+	String_Init(&clone);
 	return clone;
 }
-
-
 
 static struct string_t String_Replace(struct string_t* self, const char* oldstr, const char* newstr) {
 	String result;
 	if (!self || !self->data || !oldstr || !*oldstr) {
-		// å¦‚æœåŸä¸²ä¸ºç©ºæˆ–æ—§ä¸²ä¸ºç©ºï¼Œå°±è¿”å›åŸä¸²çš„å‰¯æœ¬
+		// Èç¹ûÔ­´®Îª¿Õ»ò¾É´®Îª¿Õ£¬¾Í·µ»ØÔ­´®µÄ¸±±¾
 		return String_Clone(self);
 	}
-	if (!newstr) newstr = "";  // ç©ºæ›¿æ¢
+	if (!newstr) newstr = "";  // ¿ÕÌæ»»
 
 	size_t old_len = strlen(oldstr);
 	size_t new_len = strlen(newstr);
 
-	// å…ˆè®¡ç®—æœ‰å¤šå°‘å¤„æ›¿æ¢
+	// ÏÈ¼ÆËãÓĞ¶àÉÙ´¦Ìæ»»
 	size_t count = 0;
 	size_t pos = 0;
 	while (pos <= self->len - old_len) {
@@ -192,17 +200,17 @@ static struct string_t String_Replace(struct string_t* self, const char* oldstr,
 		}
 	}
 
-	// è®¡ç®—ç»“æœä¸²é•¿åº¦
+	// ¼ÆËã½á¹û´®³¤¶È
 	size_t result_len = self->len + count * (new_len - old_len);
 	result.data = (char*)malloc(result_len + 1);
 	result.len = result_len;
 	if (!result.data) {
 		result.len = 0;
-		String_BindMethods(&result);
+		String_Init(&result);
 		return result;
 	}
 
-	// æ„å»ºæ–°å­—ç¬¦ä¸²
+	// ¹¹½¨ĞÂ×Ö·û´®
 	char* dst = result.data;
 	const char* src = self->data;
 	while (*src) {
@@ -217,15 +225,14 @@ static struct string_t String_Replace(struct string_t* self, const char* oldstr,
 	}
 	*dst = '\0';
 
-	String_BindMethods(&result);
+	String_Init(&result);
 	return result;
 }
-
 
 static void String_AddChars(struct string_t* self, const char* str) {
 	if (!self || !str) return;
 	if (!self->data) {
-		// å¦‚æœè‡ªèº« data ä¸ºç©ºï¼Œå˜æˆæ–°å­—ç¬¦ä¸²
+		// Èç¹û×ÔÉí data Îª¿Õ£¬±ä³ÉĞÂ×Ö·û´®
 		self->len = strlen(str);
 		self->data = (char*)malloc(self->len + 1);
 		if (self->data) {
@@ -236,30 +243,27 @@ static void String_AddChars(struct string_t* self, const char* str) {
 	}
 	size_t add_len = strlen(str);
 	char* new_data = (char*)realloc(self->data, self->len + add_len + 1);
-	if (!new_data) return;  // åˆ†é…å¤±è´¥ï¼ŒåŸæ•°æ®ä¸å˜
+	if (!new_data) return;  // ·ÖÅäÊ§°Ü£¬Ô­Êı¾İ²»±ä
 	memcpy(new_data + self->len, str, add_len);
 	self->len += add_len;
 	new_data[self->len] = '\0';
 	self->data = new_data;
 }
 
-
-
-
-
 static void String_SetChars(struct string_t* self, int index, const char* str) {
 	if (!self || !self->data || !str) return;
 	if (index < 0) index = 0;
-	if (index > (int)self->len) index = self->len; // å¦‚æœè¶…è¿‡é•¿åº¦ï¼Œå°±å½“è¿½åŠ 
+	if (index > (int)self->len) index = self->len; // Èç¹û³¬¹ı³¤¶È£¬¾Íµ±×·¼Ó
 
-	size_t new_len = index + strlen(str);
+	size_t insert_len = strlen(str);
+	size_t new_len = index + insert_len;
 	char* new_data = (char*)malloc(new_len + 1);
 	if (!new_data) return;
 
-	// æ‹·è´å‰åŠéƒ¨åˆ†
+	// ¿½±´Ç°°ë²¿·Ö£¨Èç¹û index Îª 0£¬¸´ÖÆ 0 ×Ö½ÚÒ²°²È«£©
 	memcpy(new_data, self->data, index);
-	// æ‹·è´æ–°å­—ç¬¦ä¸²
-	memcpy(new_data + index, str, strlen(str));
+	// ¿½±´ĞÂ×Ö·û´®
+	memcpy(new_data + index, str, insert_len);
 	new_data[new_len] = '\0';
 
 	free(self->data);
@@ -267,21 +271,19 @@ static void String_SetChars(struct string_t* self, int index, const char* str) {
 	self->len = new_len;
 }
 
-
 static struct string_t String_Skip(struct string_t* self, int count) {
 	if (!self || !self->data || count < 0) count = 0;
 	if (count >= (int)self->len) {
-		// è¿”å›ç©ºä¸²
-		return String_From("");
+		// ·µ»Ø¿Õ´®
+		return GetString("");
 	}
-	// ç›´æ¥åˆ©ç”¨ SubString å®ç°ï¼Œé¿å…é‡å¤ä»£ç 
+	// Ö±½ÓÀûÓÃ SubString ÊµÏÖ£¬±ÜÃâÖØ¸´´úÂë
 	return String_SubString(self, count, (int)(self->len - count));
 }
 
-
 static struct string_t String_Take(struct string_t* self, int count) {
 	if (!self || !self->data || count <= 0) {
-		return String_From("");
+		return GetString("");
 	}
 	if (count > (int)self->len) count = self->len;
 	return String_SubString(self, 0, count);
@@ -290,10 +292,10 @@ static struct string_t String_Take(struct string_t* self, int count) {
 static struct string_t String_SubString(struct string_t* self, int from, int count) {
 	String sub;
 	if (!self || !self->data || from < 0 || count <= 0 || from >= (int)self->len) {
-		return String_From("");
+		return GetString("");
 	}
 	if (from + count > (int)self->len) {
-		count = self->len - from;  // æˆªå–åˆ°æœ«å°¾
+		count = self->len - from;  // ½ØÈ¡µ½Ä©Î²
 	}
 	sub.len = count;
 	sub.data = (char*)malloc(count + 1);
@@ -303,14 +305,15 @@ static struct string_t String_SubString(struct string_t* self, int from, int cou
 	}
 	else {
 		sub.len = 0;
+		sub.data = NULL;
 	}
-	String_BindMethods(&sub);
+	String_Init(&sub);
 	return sub;
 }
 
 static char* String_ToChars(struct string_t* self) {
 	if (!self) return NULL;
-	return self->data;  // å¯èƒ½ä¸º NULL
+	return self->data;  // ¿ÉÄÜÎª NULL
 }
 
 static void String_Dispose(struct string_t* self) {
